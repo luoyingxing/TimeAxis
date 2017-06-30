@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="TimeAxisView">
+        <!--* reference：引用，如其它图片资源
+         * color：颜色
+         * boolean：布尔值
+         * dimension：尺寸值
+         * float：浮点值
+         * integer：整型值
+         * String：字符串
+         * fraction：百分数
+         * enum：枚举值（不显示定义）,作为attr的子节点存在，如<enum name="horizontal"value="0"/>-->
+        <attr name="textSize" format="dimension" />
+        <attr name="radius" format="dimension" />
+        <attr name="circleTextSpace" format="dimension" />
+        <attr name="strokeWidth" format="dimension" />
+        <attr name="interval" format="dimension" />
+        <attr name="lineStrokeWidth" format="dimension" />
+        <attr name="circleColor" format="color" />
+        <attr name="textColor" format="color" />
+        <attr name="orientation">
+            <enum name="horizontal" value="1" />
+            <enum name="vertical" value="2" />
+        </attr>
+    </declare-styleable>
+
+</resources>

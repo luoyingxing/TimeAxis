@@ -1,6 +1,8 @@
 # TimeAxis
 TimeAxisView 简单的时光轴
+
 使用如下：
+
 1、在 Activity 中：
 public class MainActivity extends AppCompatActivity {
     private TimeAxisView mTimeAxisView;

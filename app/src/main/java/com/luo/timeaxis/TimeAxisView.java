@@ -229,6 +229,14 @@ public class TimeAxisView extends View {
             return;
         }
 
+        if (HORIZONTAL == mOrientation) {
+            drawHorizontal(canvas);
+        } else if (VERTICAL == mOrientation) {
+            drawVertical(canvas);
+        }
+    }
+
+    private void drawHorizontal(Canvas canvas) {
         int w = getMeasuredWidth();
         int h = getMeasuredHeight();
         int paddingTop = getPaddingTop();
@@ -239,48 +247,48 @@ public class TimeAxisView extends View {
         int width = getMeasuredWidth() - mDefaultPaddingRight - mDefaultPaddingRight - paddingLeft - paddingRight;
         int count = mTextList.size();
 
-        if (HORIZONTAL == mOrientation) {
-            int perWidth = width / count;
+        int perWidth = width / count;
 
-            float circleX = perWidth / 2;
-            float cx;
+        float circleX = perWidth / 2;
+        float cx;
 
-            for (int i = 0; i < count; i++) {
-                //圆圈
-                mPaint.setColor(mCircleColor);
-                mPaint.setStrokeWidth(mCircleStrokeWidth);
+        for (int i = 0; i < count; i++) {
+            //圆圈
+            mPaint.setColor(mCircleColor);
+            mPaint.setStrokeWidth(mCircleStrokeWidth);
 
-                if (0 == i || count - 1 == i) {
-                    mPaint.setStyle(Paint.Style.FILL);
-                } else {
-                    mPaint.setStyle(Paint.Style.STROKE);
-                }
-                cx = circleX + i * perWidth;
-                canvas.drawCircle(cx + mDefaultPaddingLeft + paddingLeft, mDefaultPaddingTop + paddingTop + mCircleRadius, mCircleRadius, mPaint);
-
-                //文字
-                String text = mTextList.get(i);
-                Rect bounds = new Rect();
-                mTextPaint.getTextBounds(text, 0, text.length(), bounds);
-                StaticLayout layout = new StaticLayout(text, mTextPaint, perWidth, Layout.Alignment.ALIGN_NORMAL, 1.0F, 0.0F, true);
-                canvas.save();
-                canvas.translate(cx + mDefaultPaddingLeft + paddingLeft, mDefaultPaddingTop + paddingTop + mCircleRadius * 2 + mCircleTextSpace + bounds.height() / 2);
-                layout.draw(canvas);
-                canvas.restore();
-
-                //水平线
-                if (0 != i) {
-                    mPaint.setColor(mCircleColor);
-                    mPaint.setStrokeWidth(mLineStrokeWidth);
-                    canvas.drawLine(cx + mDefaultPaddingLeft + paddingLeft - perWidth + mCircleRadius + mInterval,
-                            mDefaultPaddingTop + paddingTop + mCircleRadius,
-                            cx + mDefaultPaddingLeft + paddingLeft - mCircleRadius - mInterval,
-                            mDefaultPaddingTop + paddingTop + mCircleRadius, mPaint);
-                }
+            if (0 == i || count - 1 == i) {
+                mPaint.setStyle(Paint.Style.FILL);
+            } else {
+                mPaint.setStyle(Paint.Style.STROKE);
             }
-        } else if (VERTICAL == mOrientation) {
-            //TODO 竖直方向
+            cx = circleX + i * perWidth;
+            canvas.drawCircle(cx + mDefaultPaddingLeft + paddingLeft, mDefaultPaddingTop + paddingTop + mCircleRadius, mCircleRadius, mPaint);
+
+            //文字
+            String text = mTextList.get(i);
+            Rect bounds = new Rect();
+            mTextPaint.getTextBounds(text, 0, text.length(), bounds);
+            StaticLayout layout = new StaticLayout(text, mTextPaint, perWidth, Layout.Alignment.ALIGN_NORMAL, 1.0F, 0.0F, true);
+            canvas.save();
+            canvas.translate(cx + mDefaultPaddingLeft + paddingLeft, mDefaultPaddingTop + paddingTop + mCircleRadius * 2 + mCircleTextSpace + bounds.height() / 2);
+            layout.draw(canvas);
+            canvas.restore();
+
+            //水平线
+            if (0 != i) {
+                mPaint.setColor(mCircleColor);
+                mPaint.setStrokeWidth(mLineStrokeWidth);
+                canvas.drawLine(cx + mDefaultPaddingLeft + paddingLeft - perWidth + mCircleRadius + mInterval,
+                        mDefaultPaddingTop + paddingTop + mCircleRadius,
+                        cx + mDefaultPaddingLeft + paddingLeft - mCircleRadius - mInterval,
+                        mDefaultPaddingTop + paddingTop + mCircleRadius, mPaint);
+            }
         }
+    }
+
+    private void drawVertical(Canvas canvas) {
+
     }
 
     private void mLog(Object obj) {

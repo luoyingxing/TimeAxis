@@ -24,6 +24,7 @@ import java.util.List;
  */
 
 public class TimeAxisView extends View {
+    private Context mContext;
     public static final int HORIZONTAL = 1;
     public static final int VERTICAL = 2;
     //画笔
@@ -51,6 +52,13 @@ public class TimeAxisView extends View {
     //圆圈与横线的间隔
     private int mInterval;
 
+    private static final int FACTOR_VERTICAL = 8;
+    private static final int FACTOR_HORIZONTAL = 1;
+    private int mDefaultPaddingTop;
+    private int mDefaultPaddingBottom;
+    private int mDefaultPaddingLeft;
+    private int mDefaultPaddingRight;
+
     public TimeAxisView(Context context) {
         this(context, null);
     }
@@ -65,6 +73,7 @@ public class TimeAxisView extends View {
     }
 
     private void init(Context context, AttributeSet attrs) {
+        mContext = context;
         TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.TimeAxisView, 0, 0);
         float density = getResources().getDisplayMetrics().density;
 
@@ -82,15 +91,21 @@ public class TimeAxisView extends View {
 
         array.recycle();
 
+        mDefaultPaddingTop = (int) (FACTOR_VERTICAL * density);
+        mDefaultPaddingBottom = (int) (FACTOR_VERTICAL * density);
+        mDefaultPaddingLeft = (int) (FACTOR_HORIZONTAL * density);
+        mDefaultPaddingRight = (int) (FACTOR_HORIZONTAL * density);
+
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
+        mPaint.setTextAlign(Paint.Align.CENTER);
+        mPaint.setTextSize(mTextSize);
 
         mTextPaint = new TextPaint();
         mTextPaint.setColor(mTextColor);
         mTextPaint.setAntiAlias(true);
         mTextPaint.setTextSize(mTextSize);
         mTextPaint.setTextAlign(TextPaint.Align.CENTER);
-
     }
 
     public void setTextList(List<String> list) {
@@ -122,26 +137,89 @@ public class TimeAxisView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int width = getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec);
-        int height = getDefaultSize(getSuggestedMinimumHeight(), heightMeasureSpec);
+        int width = 0;
+        int height = 0;
+
+        int specModeWidth = MeasureSpec.getMode(widthMeasureSpec);
+        int specSizeWidth = MeasureSpec.getSize(widthMeasureSpec);
+        int specModeHeight = MeasureSpec.getMode(heightMeasureSpec);
+        int specSizeHeight = MeasureSpec.getSize(heightMeasureSpec);
+
+        switch (specModeWidth) {
+            case MeasureSpec.UNSPECIFIED:
+                width = getSuggestedMinimumWidth();
+                break;
+            case MeasureSpec.AT_MOST:
+                width = getDefaultWidth();
+                break;
+            case MeasureSpec.EXACTLY:
+                width = specSizeWidth;
+                break;
+        }
+
+        switch (specModeHeight) {
+            case MeasureSpec.UNSPECIFIED:
+                height = getSuggestedMinimumHeight();
+                break;
+            case MeasureSpec.AT_MOST:
+                height = getDefaultHeight(width);
+                break;
+            case MeasureSpec.EXACTLY:
+                height = specSizeHeight;
+                break;
+        }
+
         setMeasuredDimension(width, height);
     }
 
-    public static int getDefaultSize(int size, int measureSpec) {
-        int result = size;
-        int specMode = MeasureSpec.getMode(measureSpec);
-        int specSize = MeasureSpec.getSize(measureSpec);
-
-        switch (specMode) {
-            case MeasureSpec.UNSPECIFIED: //match_parent
-                result = size;
-                break;
-            case MeasureSpec.AT_MOST: //wrap_content
-            case MeasureSpec.EXACTLY: //xx dp
-                result = specSize;
-                break;
+    /**
+     * 计算wrap_content 模式时的view宽度
+     *
+     * @return wrap_content 宽度
+     */
+    private int getDefaultWidth() {
+        if (null != mTextList) {
+            //所有圆圈的宽度 + 所有的间隔 + 默认左右边距
+            return mTextList.size() * 2 * mCircleRadius * 2 + getPaddingLeft() + getPaddingRight() + mDefaultPaddingLeft + mDefaultPaddingRight;
         }
-        return result;
+        return 0;
+    }
+
+    /**
+     * 计算wrap_content 模式时的view高度
+     *
+     * @param width 根据宽度计算每个圆圈的宽度区域
+     * @return wrap_content 高度
+     */
+    private int getDefaultHeight(int width) {
+        if (null != mTextList) {
+            //圆圈的高度 + 文字的高度 + 默认上下边距
+            return mCircleRadius * 2 + mInterval + getTextHeight(width) + getPaddingTop() + getPaddingBottom() + mDefaultPaddingTop + mDefaultPaddingBottom;
+        }
+        return 0;
+    }
+
+    /**
+     * 计算文字的最大高度
+     *
+     * @param width 根据View的宽度来计算每段文字的宽度
+     * @return 文字的最大高度
+     */
+    private int getTextHeight(int width) {
+        int count = mTextList.size();
+        String text = "";
+        for (String str : mTextList) {
+            if (text.length() < str.length()) {
+                text = str;
+            }
+        }
+        int perWidth = width / count;
+        Rect bounds = new Rect();
+        TextPaint paint = new TextPaint();
+        paint.setTextSize(mTextSize);
+        paint.getTextBounds(text, 0, text.length(), bounds);
+        StaticLayout layout = new StaticLayout(text, paint, perWidth, Layout.Alignment.ALIGN_NORMAL, 1.0F, 0.0F, true);
+        return layout.getHeight();
     }
 
     @Override
@@ -158,22 +236,8 @@ public class TimeAxisView extends View {
         int paddingLeft = getPaddingLeft();
         int paddingRight = getPaddingRight();
 
-        int width = getMeasuredWidth() - paddingLeft - paddingRight;
-
+        int width = getMeasuredWidth() - mDefaultPaddingRight - mDefaultPaddingRight - paddingLeft - paddingRight;
         int count = mTextList.size();
-
-        if (count * mCircleRadius * 2 > width) {
-            try {
-                throw new IllegalStateException("The width of all circles is exceed screen width! please try put it in HorizontalScrollView");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        mPaint.reset();
-        mPaint.setAntiAlias(true);
-        mPaint.setTextAlign(Paint.Align.CENTER);
-        mPaint.setTextSize(mTextSize);
 
         if (HORIZONTAL == mOrientation) {
             int perWidth = width / count;
@@ -182,34 +246,36 @@ public class TimeAxisView extends View {
             float cx;
 
             for (int i = 0; i < count; i++) {
-                //画圆圈
+                //圆圈
                 mPaint.setColor(mCircleColor);
                 mPaint.setStrokeWidth(mCircleStrokeWidth);
 
-                if (i == 0 || i == count - 1) {
+                if (0 == i || count - 1 == i) {
                     mPaint.setStyle(Paint.Style.FILL);
                 } else {
                     mPaint.setStyle(Paint.Style.STROKE);
                 }
                 cx = circleX + i * perWidth;
-                canvas.drawCircle(cx, paddingTop + mCircleRadius, mCircleRadius, mPaint);
+                canvas.drawCircle(cx + mDefaultPaddingLeft + paddingLeft, mDefaultPaddingTop + paddingTop + mCircleRadius, mCircleRadius, mPaint);
 
-                //画文字
+                //文字
                 String text = mTextList.get(i);
                 Rect bounds = new Rect();
                 mTextPaint.getTextBounds(text, 0, text.length(), bounds);
                 StaticLayout layout = new StaticLayout(text, mTextPaint, perWidth, Layout.Alignment.ALIGN_NORMAL, 1.0F, 0.0F, true);
                 canvas.save();
-                canvas.translate(cx, paddingTop + mCircleRadius * 2 + mCircleTextSpace + bounds.height() / 2);
+                canvas.translate(cx + mDefaultPaddingLeft + paddingLeft, mDefaultPaddingTop + paddingTop + mCircleRadius * 2 + mCircleTextSpace + bounds.height() / 2);
                 layout.draw(canvas);
                 canvas.restore();
 
-                //画水平线
+                //水平线
                 if (0 != i) {
                     mPaint.setColor(mCircleColor);
                     mPaint.setStrokeWidth(mLineStrokeWidth);
-                    canvas.drawLine(cx - perWidth + mCircleRadius + mInterval, paddingTop + mCircleRadius,
-                            cx - mCircleRadius - mInterval, paddingTop + mCircleRadius, mPaint);
+                    canvas.drawLine(cx + mDefaultPaddingLeft + paddingLeft - perWidth + mCircleRadius + mInterval,
+                            mDefaultPaddingTop + paddingTop + mCircleRadius,
+                            cx + mDefaultPaddingLeft + paddingLeft - mCircleRadius - mInterval,
+                            mDefaultPaddingTop + paddingTop + mCircleRadius, mPaint);
                 }
             }
         } else if (VERTICAL == mOrientation) {
@@ -218,6 +284,6 @@ public class TimeAxisView extends View {
     }
 
     private void mLog(Object obj) {
-        Log.v("TimeAxisView", obj + "");
+        Log.i("TimeAxisView", obj + "");
     }
 }

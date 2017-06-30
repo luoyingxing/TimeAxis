@@ -10,7 +10,6 @@
         android:id="@+id/ta_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="10dp"
         app:circleColor="@color/colorAccent"
         app:circleTextSpace="2dp"
         app:interval="4dp"
@@ -20,5 +19,10 @@
         app:strokeWidth="1dp"
         app:textColor="@color/colorAccent"
         app:textSize="13sp" />
+
+    <com.luo.timeaxis.TimeAxisView
+        android:id="@+id/ta_view_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

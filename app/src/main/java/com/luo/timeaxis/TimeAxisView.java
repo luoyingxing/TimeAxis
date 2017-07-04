@@ -2,6 +2,8 @@ package com.luo.timeaxis;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -51,6 +53,8 @@ public class TimeAxisView extends View {
     private int mLineStrokeWidth;
     //圆圈与横线的间隔
     private int mInterval;
+    //圆圈的图片
+    private int mCircleDrawwableRescourse;
 
     private static final int FACTOR_VERTICAL = 8;
     private static final int FACTOR_HORIZONTAL = 1;
@@ -86,6 +90,8 @@ public class TimeAxisView extends View {
 
         mOrientation = array.getInt(R.styleable.TimeAxisView_orientation, 1);
 
+        mCircleDrawwableRescourse = array.getResourceId(R.styleable.TimeAxisView_drawable, 0);
+
         mCircleColor = array.getColor(R.styleable.TimeAxisView_circleColor, 0xff666666);
         mTextColor = array.getColor(R.styleable.TimeAxisView_textColor, 0xff666666);
 
@@ -106,6 +112,12 @@ public class TimeAxisView extends View {
         mTextPaint.setAntiAlias(true);
         mTextPaint.setTextSize(mTextSize);
         mTextPaint.setTextAlign(TextPaint.Align.CENTER);
+
+        //TODO 测试数据
+        String text[] = {"李白", "陶渊明", "杜甫", "王维", "李煜"};
+        mTextList = new ArrayList<>();
+        mTextList.addAll(Arrays.asList(text));
+        //TODO 测试数据
     }
 
     public void setTextList(List<String> list) {
@@ -252,18 +264,37 @@ public class TimeAxisView extends View {
         float circleX = perWidth / 2;
         float cx;
 
+        Bitmap bitmap = null;
+
+        if (0 != mCircleDrawwableRescourse) {
+            bitmap = BitmapFactory.decodeResource(mContext.getResources(), mCircleDrawwableRescourse);
+        }
+
         for (int i = 0; i < count; i++) {
             //圆圈
             mPaint.setColor(mCircleColor);
             mPaint.setStrokeWidth(mCircleStrokeWidth);
 
-            if (0 == i || count - 1 == i) {
-                mPaint.setStyle(Paint.Style.FILL);
+            if (null != bitmap) {
+                cx = circleX + i * perWidth;
+
+                Rect rect = new Rect();
+                rect.left = (int) (cx + mDefaultPaddingLeft + paddingLeft - mCircleRadius);
+                rect.top = mDefaultPaddingTop + paddingTop;
+                rect.right = (int) (cx + mDefaultPaddingLeft + paddingLeft + mCircleRadius);
+                rect.bottom = mDefaultPaddingTop + paddingTop + mCircleRadius * 2;
+
+                canvas.drawBitmap(bitmap, null, rect, mPaint);
+
             } else {
-                mPaint.setStyle(Paint.Style.STROKE);
+                if (0 == i || count - 1 == i) {
+                    mPaint.setStyle(Paint.Style.FILL);
+                } else {
+                    mPaint.setStyle(Paint.Style.STROKE);
+                }
+                cx = circleX + i * perWidth;
+                canvas.drawCircle(cx + mDefaultPaddingLeft + paddingLeft, mDefaultPaddingTop + paddingTop + mCircleRadius, mCircleRadius, mPaint);
             }
-            cx = circleX + i * perWidth;
-            canvas.drawCircle(cx + mDefaultPaddingLeft + paddingLeft, mDefaultPaddingTop + paddingTop + mCircleRadius, mCircleRadius, mPaint);
 
             //文字
             String text = mTextList.get(i);
@@ -284,6 +315,10 @@ public class TimeAxisView extends View {
                         cx + mDefaultPaddingLeft + paddingLeft - mCircleRadius - mInterval,
                         mDefaultPaddingTop + paddingTop + mCircleRadius, mPaint);
             }
+        }
+
+        if (null != bitmap) {
+            bitmap.recycle();
         }
     }
 

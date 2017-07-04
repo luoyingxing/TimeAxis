@@ -21,9 +21,22 @@
         app:textSize="13sp" />
 
     <com.luo.timeaxis.TimeAxisView
-        android:id="@+id/ta_view_vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:drawable="@mipmap/icon_setting" />
+        app:drawable="@mipmap/icon_setting"
+        app:orientation="horizontal" />
+
+    <com.luo.timeaxis.TimeAxisView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:circleColor="@color/colorPrimary"
+        app:circleTextSpace="15dp"
+        app:interval="8dp"
+        app:lineStrokeWidth="2dp"
+        app:orientation="vertical"
+        app:radius="14dp"
+        app:strokeWidth="2dp"
+        app:textColor="@color/colorPrimary"
+        app:textSize="16sp" />
 
 </LinearLayout>

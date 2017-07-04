@@ -54,10 +54,10 @@ public class TimeAxisView extends View {
     //圆圈与横线的间隔
     private int mInterval;
     //圆圈的图片
-    private int mCircleDrawwableRescourse;
+    private int mCircleDrawable;
 
     private static final int FACTOR_VERTICAL = 8;
-    private static final int FACTOR_HORIZONTAL = 1;
+    private static final int FACTOR_HORIZONTAL = 2;
     private int mDefaultPaddingTop;
     private int mDefaultPaddingBottom;
     private int mDefaultPaddingLeft;
@@ -90,7 +90,7 @@ public class TimeAxisView extends View {
 
         mOrientation = array.getInt(R.styleable.TimeAxisView_orientation, 1);
 
-        mCircleDrawwableRescourse = array.getResourceId(R.styleable.TimeAxisView_drawable, 0);
+        mCircleDrawable = array.getResourceId(R.styleable.TimeAxisView_drawable, 0);
 
         mCircleColor = array.getColor(R.styleable.TimeAxisView_circleColor, 0xff666666);
         mTextColor = array.getColor(R.styleable.TimeAxisView_textColor, 0xff666666);
@@ -113,11 +113,6 @@ public class TimeAxisView extends View {
         mTextPaint.setTextSize(mTextSize);
         mTextPaint.setTextAlign(TextPaint.Align.CENTER);
 
-        //TODO 测试数据
-        String text[] = {"李白", "陶渊明", "杜甫", "王维", "李煜"};
-        mTextList = new ArrayList<>();
-        mTextList.addAll(Arrays.asList(text));
-        //TODO 测试数据
     }
 
     public void setTextList(List<String> list) {
@@ -157,30 +152,55 @@ public class TimeAxisView extends View {
         int specModeHeight = MeasureSpec.getMode(heightMeasureSpec);
         int specSizeHeight = MeasureSpec.getSize(heightMeasureSpec);
 
-        switch (specModeWidth) {
-            case MeasureSpec.UNSPECIFIED:
-                width = getSuggestedMinimumWidth();
-                break;
-            case MeasureSpec.AT_MOST:
-                width = getDefaultWidth();
-                break;
-            case MeasureSpec.EXACTLY:
-                width = specSizeWidth;
-                break;
-        }
+        if (HORIZONTAL == mOrientation) {
+            switch (specModeWidth) {
+                case MeasureSpec.UNSPECIFIED:
+                    width = getSuggestedMinimumWidth();
+                    break;
+                case MeasureSpec.AT_MOST:
+                    width = getDefaultWidth();
+                    break;
+                case MeasureSpec.EXACTLY:
+                    width = specSizeWidth;
+                    break;
+            }
 
-        switch (specModeHeight) {
-            case MeasureSpec.UNSPECIFIED:
-                height = getSuggestedMinimumHeight();
-                break;
-            case MeasureSpec.AT_MOST:
-                height = getDefaultHeight(width);
-                break;
-            case MeasureSpec.EXACTLY:
-                height = specSizeHeight;
-                break;
-        }
+            switch (specModeHeight) {
+                case MeasureSpec.UNSPECIFIED:
+                    height = getSuggestedMinimumHeight();
+                    break;
+                case MeasureSpec.AT_MOST:
+                    height = getDefaultHeight(width);
+                    break;
+                case MeasureSpec.EXACTLY:
+                    height = specSizeHeight;
+                    break;
+            }
+        } else if (VERTICAL == mOrientation) {
+            switch (specModeWidth) {
+                case MeasureSpec.UNSPECIFIED:
+                    width = getSuggestedMinimumWidth();
+                    break;
+                case MeasureSpec.AT_MOST:
+                    width = getVerticalDefaultWidth();
+                    break;
+                case MeasureSpec.EXACTLY:
+                    width = specSizeWidth;
+                    break;
+            }
 
+            switch (specModeHeight) {
+                case MeasureSpec.UNSPECIFIED:
+                    height = getSuggestedMinimumHeight();
+                    break;
+                case MeasureSpec.AT_MOST:
+                    height = getVerticalDefaultHeight();
+                    break;
+                case MeasureSpec.EXACTLY:
+                    height = specSizeHeight;
+                    break;
+            }
+        }
         setMeasuredDimension(width, height);
     }
 
@@ -197,6 +217,14 @@ public class TimeAxisView extends View {
         return 0;
     }
 
+    private int getVerticalDefaultWidth() {
+        if (null != mTextList) {
+            //所有圆圈的宽度 + 所有的间隔 + 默认左右边距
+            return mContext.getResources().getDisplayMetrics().widthPixels - getPaddingLeft() - getPaddingRight() - mDefaultPaddingLeft - mDefaultPaddingRight;
+        }
+        return 0;
+    }
+
     /**
      * 计算wrap_content 模式时的view高度
      *
@@ -207,6 +235,14 @@ public class TimeAxisView extends View {
         if (null != mTextList) {
             //圆圈的高度 + 文字的高度 + 默认上下边距
             return mCircleRadius * 2 + mInterval + getTextHeight(width) + getPaddingTop() + getPaddingBottom() + mDefaultPaddingTop + mDefaultPaddingBottom;
+        }
+        return 0;
+    }
+
+    private int getVerticalDefaultHeight() {
+        if (null != mTextList) {
+            //所有圆圈的高度 + 所有的间隔 + 默认左右边距
+            return mTextList.size() * 3 * mCircleRadius * 2 + getPaddingTop() + getPaddingBottom() + mDefaultPaddingTop + mDefaultPaddingBottom;
         }
         return 0;
     }
@@ -256,7 +292,7 @@ public class TimeAxisView extends View {
         int paddingLeft = getPaddingLeft();
         int paddingRight = getPaddingRight();
 
-        int width = getMeasuredWidth() - mDefaultPaddingRight - mDefaultPaddingRight - paddingLeft - paddingRight;
+        int width = w - mDefaultPaddingRight - mDefaultPaddingRight - paddingLeft - paddingRight;
         int count = mTextList.size();
 
         int perWidth = width / count;
@@ -266,8 +302,8 @@ public class TimeAxisView extends View {
 
         Bitmap bitmap = null;
 
-        if (0 != mCircleDrawwableRescourse) {
-            bitmap = BitmapFactory.decodeResource(mContext.getResources(), mCircleDrawwableRescourse);
+        if (0 != mCircleDrawable) {
+            bitmap = BitmapFactory.decodeResource(mContext.getResources(), mCircleDrawable);
         }
 
         for (int i = 0; i < count; i++) {
@@ -323,7 +359,77 @@ public class TimeAxisView extends View {
     }
 
     private void drawVertical(Canvas canvas) {
+        int w = getMeasuredWidth();
+        int h = getMeasuredHeight();
+        int paddingTop = getPaddingTop();
+        int paddingBottom = getPaddingBottom();
+        int paddingLeft = getPaddingLeft();
+        int paddingRight = getPaddingRight();
 
+        int height = h - mDefaultPaddingTop - mDefaultPaddingBottom - paddingTop - paddingBottom;
+        int count = mTextList.size();
+
+        int perHeight = height / count;
+
+        float circleY = perHeight / 2;
+        float cy = 0;
+
+        Bitmap bitmap = null;
+
+        if (0 != mCircleDrawable) {
+            bitmap = BitmapFactory.decodeResource(mContext.getResources(), mCircleDrawable);
+        }
+
+        for (int i = 0; i < count; i++) {
+            //圆圈
+            mPaint.setColor(mCircleColor);
+            mPaint.setStrokeWidth(mCircleStrokeWidth);
+
+            if (null != bitmap) {
+                cy = circleY + i * perHeight;
+                Rect rect = new Rect();
+                rect.left = mDefaultPaddingLeft + paddingLeft;
+                rect.top = (int) (cy + mDefaultPaddingTop + paddingTop - mCircleRadius);
+                rect.right = mDefaultPaddingLeft + paddingLeft + mCircleRadius * 2;
+                rect.bottom = (int) (cy + mDefaultPaddingTop + paddingTop + mCircleRadius);
+                canvas.drawBitmap(bitmap, null, rect, mPaint);
+            } else {
+                if (0 == i || count - 1 == i) {
+                    mPaint.setStyle(Paint.Style.FILL);
+                } else {
+                    mPaint.setStyle(Paint.Style.STROKE);
+                }
+                cy = circleY + i * perHeight;
+                canvas.drawCircle(mDefaultPaddingLeft + paddingLeft + mCircleRadius, cy + mDefaultPaddingTop + paddingTop, mCircleRadius, mPaint);
+            }
+
+            //文字
+            String text = mTextList.get(i);
+            Rect bounds = new Rect();
+            mTextPaint.setTextAlign(Paint.Align.LEFT);
+            mTextPaint.getTextBounds(text, 0, text.length(), bounds);
+            StaticLayout layout = new StaticLayout(text, mTextPaint, w - mDefaultPaddingLeft - paddingLeft - mDefaultPaddingRight - paddingRight - mCircleRadius * 2,
+                    Layout.Alignment.ALIGN_NORMAL, 1.0F, 0.0F, true);
+            canvas.save();
+            canvas.translate(mDefaultPaddingLeft + paddingLeft + mCircleTextSpace + mCircleRadius * 2, cy + mDefaultPaddingTop + paddingTop - layout.getHeight() / 2);
+            layout.draw(canvas);
+            canvas.restore();
+
+            //水平线
+            if (0 != i) {
+                mPaint.setColor(mCircleColor);
+                mPaint.setStrokeWidth(mLineStrokeWidth);
+                canvas.drawLine(mDefaultPaddingLeft + paddingLeft + mCircleRadius,
+                        cy + mDefaultPaddingTop + paddingTop - perHeight + mCircleRadius + mInterval,
+                        mDefaultPaddingLeft + paddingLeft + mCircleRadius,
+                        cy + mDefaultPaddingTop + paddingTop - mCircleRadius - mInterval,
+                        mPaint);
+            }
+        }
+
+        if (null != bitmap) {
+            bitmap.recycle();
+        }
     }
 
     private void mLog(Object obj) {
